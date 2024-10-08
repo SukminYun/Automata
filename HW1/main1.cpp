@@ -5,8 +5,7 @@
 
 using namespace std;
 
-
-// About Regular expression to postfix form
+// step1. Change regular expression to postfix form
 int Precedence(char oper) {
     switch (oper)
     {
@@ -22,13 +21,14 @@ int Precedence(char oper) {
     }
 }
 
+// postfix로 변환하는 function
 string RegExprToPost(string regex){
     string output;
     stack<char> oper_stack;
 
     for (int i = 0; i < regex.length(); i++) {
         char c = regex[i];
-        // 입력 값이 operand 일 때
+        // 입력 값이 operand 일 때, 그대로 output에 추가
         if (c == '0' || c =='1') {
             output += c;
         }
@@ -52,6 +52,7 @@ string RegExprToPost(string regex){
 
         // 입력 값이 operator일 때
         else {
+            // stack에 담긴 operator가 계산 순서가 더 빠를경우 stack에서 pop
             while (!oper_stack.empty() && oper_stack.top() != '(' &&
                    Precedence(oper_stack.top()) >= Precedence(c)) {
                 output += oper_stack.top();
@@ -61,24 +62,27 @@ string RegExprToPost(string regex){
         }
     }
 
+    // stack에 남은 operator 처리
     while (!oper_stack.empty()){
         output += oper_stack.top();
         oper_stack.pop();
     }
-
     return output;
 }
 
 
-// About construction of NFA from postfix form 
+// step2. construction of NFA from postfix form 
+// transition을 한번에 기억하기 위한 struct
 struct Transition {
     int from;
     int to;
     char symbol;
 
+    // generator
     Transition(int f, int t, char s) : from(f), to(t), symbol(s) {}
 };
 
+// NFA를 group단위로 관리하기 위한 NFA class
 class NFA {
     public:
         // NFA group 안의 state의 개수
@@ -117,7 +121,7 @@ class NFA {
             result.addTransition(transition.from, transition.to, transition.symbol);
         }
 
-        // first NFA와 second NFAdml concat를 vector에 추가
+        // first NFA와 second NFA의 concatenate를 vector에 추가
         result.addTransition(first.finalState, second.initialState, 'e');
         result.numStates += second.numStates;
         result.finalState = second.finalState;
@@ -129,7 +133,7 @@ class NFA {
     static NFA unite(NFA& first, NFA& second, int& new_State_num) {
         NFA result;
 
-        // 2개의 NFA를 연결할 state 2개를 추가
+        // 2개의 NFA를 연결할 state 2개를 추가 => (기존) + 2
         result.numStates = first.numStates + second.numStates + 2;
         result.initialState = new_State_num++;
         result.finalState = new_State_num++;
@@ -166,7 +170,7 @@ class NFA {
             result.addTransition(transition.from, transition.to, transition.symbol);
         }
 
-        // e.g 순서에 맞게 새로운 state와의 transition 기록
+        // spec에 제시된 순서에 맞게 새로운 state와의 transition 기록
         result.addTransition(result.initialState, nfa.initialState, 'e');
         result.addTransition(result.initialState, result.finalState, 'e');
 
@@ -177,6 +181,7 @@ class NFA {
     }
 };
 
+// 입력 받은 postfix를 바탕으로 NFA를 만드는 함수
 NFA constructNFA(const string& postfix) {
     // 입력받는 postfix form에 따라 생성될 NFA를 저장하는 stack
     stack<NFA> nfaStack;
@@ -184,7 +189,7 @@ NFA constructNFA(const string& postfix) {
     // 새롭게 생성될 state의 숫자를 지정하는 변수
     int new_State_num = 0;
 
-    // input별로 위에서 정의한 function을 실행
+    // input에 따라 앞서 정의한 NFA class의 function을 실행
     for (int i = 0; i < postfix.length(); i++) {
         char c = postfix[i];
 
@@ -224,6 +229,7 @@ NFA constructNFA(const string& postfix) {
     return nfaStack.top();
 }
 
+// 최종 NFA의 transition을 spec에 맞게 출력하는 함수
 void printNFA(const NFA& nfa) {
     cout << nfa.numStates << " " << nfa.transitions.size() << " " << nfa.initialState << " " << nfa.finalState << endl;
 
