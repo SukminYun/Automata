@@ -116,8 +116,9 @@ class NFA {
     static NFA concatenate(NFA& first, NFA& second) {
         NFA result = first;
         
+        for (vector<Transition>::iterator it = second.transitions.begin(); it != second.transitions.end(); ++it) {
+            Transition& transition = *it;
         // '.' 뒤에 오는 NFA의 transition 기록을 앞 NFA에 이어 붙임
-        for (auto& transition : second.transitions) {
             result.addTransition(transition.from, transition.to, transition.symbol);
         }
 
@@ -139,10 +140,13 @@ class NFA {
         result.finalState = new_State_num++;
 
         // 합쳐질 result NFA에 first, second NFA의 transition을 새롭게 기록
-        for (auto& transition : first.transitions) {
+        
+        for (vector<Transition>::iterator it = first.transitions.begin(); it != first.transitions.end(); ++it) {
+            Transition& transition = *it;
             result.addTransition(transition.from, transition.to, transition.symbol);
         }
-        for (auto& transition : second.transitions) {
+        for (vector<Transition>::iterator it = second.transitions.begin(); it != second.transitions.end(); ++it) {
+            Transition& transition = *it;
             result.addTransition(transition.from, transition.to, transition.symbol);
         }
 
@@ -166,7 +170,8 @@ class NFA {
         result.finalState = new_State_num++;
 
         // 기존 NFA의 transition 기록을 이어서 작성
-        for (auto& transition : nfa.transitions) {
+        for (vector<Transition>::iterator it = nfa.transitions.begin(); it != nfa.transitions.end(); ++it) {
+            Transition& transition = *it;
             result.addTransition(transition.from, transition.to, transition.symbol);
         }
 
@@ -233,7 +238,8 @@ NFA constructNFA(const string& postfix) {
 void printNFA(const NFA& nfa) {
     cout << nfa.numStates << " " << nfa.transitions.size() << " " << nfa.initialState << " " << nfa.finalState << endl;
 
-    for (const auto& transition : nfa.transitions) {
+    for (vector<Transition>::const_iterator it = nfa.transitions.begin(); it != nfa.transitions.end(); ++it) {
+        const Transition& transition = *it;
         cout << transition.from << " " << transition.to << " " << transition.symbol << endl;
     }
 }
